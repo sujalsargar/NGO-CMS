@@ -1,0 +1,33 @@
+# Django
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.sqlite3
+media/
+
+# Node.js
+node_modules/
+frontend/node_modules/
+frontend/package-lock.json
+frontend/yarn.lock
+
+# Python
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.env
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Django
+*.json
+*.yaml
