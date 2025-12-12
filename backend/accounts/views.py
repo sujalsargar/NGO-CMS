@@ -1,65 +1,34 @@
-from django.conf import settings
-from rest_framework.decorators import api_view
+from rest_framework import generics, status
 from rest_framework.response import Response
-import hashlib
-import hmac
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from .models import User
+from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
 
-# -----------------------------------------
-# SAFE RAZORPAY IMPORT (DOES NOT BREAK DEPLOY)
-# -----------------------------------------
-try:
-    import razorpay
-    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-except ImportError:
-    razorpay = None
-    client = None
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
 
+class LoginView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = LoginSerializer
 
-# -----------------------------------------
-# CREATE ORDER (will not crash backend)
-# -----------------------------------------
-@api_view(['POST'])
-def create_order(request):
-    if client is None:
-        return Response(
-            {"error": "Razorpay is not enabled yet. Install razorpay package to use this endpoint."},
-            status=501
-        )
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
 
-    amount = request.data.get('amount')
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserSerializer(user).data
+        })
 
-    order_data = {
-        'amount': amount,
-        'currency': 'INR',
-        'payment_capture': 1
-    }
+class UserDetailView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
 
-    order = client.order.create(data=order_data)
-    return Response(order)
-
-
-# -----------------------------------------
-# VERIFY PAYMENT (will not crash backend)
-# -----------------------------------------
-@api_view(['POST'])
-def verify_payment(request):
-    if razorpay is None:
-        return Response(
-            {"error": "Razorpay is not enabled yet. Install razorpay package to use this endpoint."},
-            status=501
-        )
-
-    razorpay_order_id = request.data.get('razorpay_order_id')
-    razorpay_payment_id = request.data.get('razorpay_payment_id')
-    razorpay_signature = request.data.get('razorpay_signature')
-
-    generated_signature = hmac.new(
-        settings.RAZORPAY_KEY_SECRET.encode('utf-8'),
-        f"{razorpay_order_id}|{razorpay_payment_id}".encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-
-    if generated_signature == razorpay_signature:
-        return Response({'success': True})
-    else:
-        return Response({'success': False, 'error': 'Invalid signature'})
+    def get_object(self):
+        return self.request.user
