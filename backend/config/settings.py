@@ -1,5 +1,5 @@
 import os
-import dj_database_url
+#import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -104,7 +104,7 @@ LOGGING = {
 # DATABASE
 # ----------------------------------------------------
 
-
+"""
 DATABASES = {
     'default': dj_database_url.parse(
         os.getenv("DATABASE_URL"),
@@ -112,9 +112,8 @@ DATABASES = {
         ssl_require=False  # important for internal Render URL
     )
 }
-
-
 """
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -130,7 +129,7 @@ DATABASES = {
         },
     }
 }
-"""
+
 
 # ----------------------------------------------------
 # PASSWORD VALIDATORS
