@@ -1,4 +1,5 @@
 import os
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -11,7 +12,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['*']
 
 
 # ----------------------------------------------------
@@ -102,6 +103,18 @@ LOGGING = {
 # ----------------------------------------------------
 # DATABASE
 # ----------------------------------------------------
+
+
+DATABASES = {
+    'default': dj_database_url.parse(
+        os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=False  # important for internal Render URL
+    )
+}
+
+
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -117,7 +130,7 @@ DATABASES = {
         },
     }
 }
-
+"""
 
 # ----------------------------------------------------
 # PASSWORD VALIDATORS
@@ -195,6 +208,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 # If needed for CSRF protection with React
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "https://ngo-backend.onrender.com",
+    "https://ngo-cms.onrender.com",
 ]
